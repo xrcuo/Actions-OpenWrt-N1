@@ -22,9 +22,7 @@ jobs:
       id: build
       if: (!cancelled())
       run: |
-        [ -d openwrt-armvirt ] || mkdir -p openwrt-armvirt
-        curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" | grep -o "openwrt_armvirt_.*/openwrt-armvirt-.*\.tar.gz" | head -n 1 > DOWNLOAD_ARMVIRT
-        [ -s DOWNLOAD_ARMVIRT ] && wget -q -P openwrt-armvirt https://github.com/${GITHUB_REPOSITORY}/releases/download/$(cat DOWNLOAD_ARMVIRT)
+        wget -q -P openwrt-armvirt https://github.com/xrcuo/Actions-OpenWrt-N1/releases/download/c/openwrt-armvirt-64-default-rootfs.tar.gz
     
     - name: 打包内核
       uses: unifreq/openwrt_packit@master
