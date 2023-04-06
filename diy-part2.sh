@@ -12,7 +12,3 @@
 
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
-
-
-sed -i 's/#src-git helloworld https://github.com/fw876/helloworld.git/src-git small8 https://github.com/kenzok8/small-package/g' feeds.conf.default
-sed -i 's/#src-git oui https://github.com/zhaojh329/oui.git/src-git opentopd  https://github.com/sirpdboy/sirpdboy-package/g' feeds.conf.default
