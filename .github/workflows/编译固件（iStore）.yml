@@ -153,7 +153,7 @@ jobs:
         PACKAGE_SOC: s905d
        # KERNEL_AUTO_LATEST: false
        # KERNEL_REPO_URL: https://github.com/quanjindeng/Actions_OpenWrt-Amlogic/tree/main/kernel
-        KERNEL_VERSION_NAME: 6.1.22_5.4.234_5.15.98_5.10.172
+        KERNEL_VERSION_NAME: 6.1_5.4_5.15_5.10
 
     - name: 发布固件
       uses: ncipollo/release-action@v1
