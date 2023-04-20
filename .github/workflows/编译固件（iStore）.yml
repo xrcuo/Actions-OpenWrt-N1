@@ -175,7 +175,7 @@ jobs:
           token: ${{ secrets.GITHDSQ_TOKEN }}
           repository: ${{ github.repository }}
           keep_minimum_runs: 0
-          retain_days: 7
+          retain_days: 5
           #retain_days: ${{ github.event.inputs.action_days }}
     
     - name: 删除多余releases
