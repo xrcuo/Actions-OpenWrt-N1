@@ -108,9 +108,6 @@ jobs:
       id: package
       run: |
         cd openwrt
-        sed -i 's#https://github.com/breakings/OpenWrt#https://github.com/xrcuo/Actions-OpenWrt-N1#g' package/luci-app-amlogic/luci-app-amlogic/root/etc/config/amlogic
-        sed -i 's#ARMv8#openwrt_armvirt_iStore#g' package/luci-app-amlogic/luci-app-amlogic/root/etc/config/amlogic
-        sed -i 's#opt/kernel#kernel#g' package/luci-app-amlogic/luci-app-amlogic/root/etc/config/amlogic
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
