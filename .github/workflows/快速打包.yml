@@ -22,7 +22,7 @@ jobs:
       id: build
       if: (!cancelled())
       run: |
-        wget -q -P openwrt-armvirt https://github.com/xrcuo/Actions-OpenWrt-N1/releases/download/c/openwrt-armvirt-64-default-rootfs.tar.gz
+        wget -q -P openwrt-armvirt https://github.com/xrcuo/Actions-OpenWrt-N1/releases/download/untagged-b1255a1ce09cf4db9d99/istoreos-armvirt-64-default-rootfs.tar.gz
     
     - name: 打包内核
       uses: unifreq/openwrt_packit@master
