@@ -24,6 +24,7 @@ env:
   CONFIG_FILE: .config-istore
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2-istore.sh
+  UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
 
 jobs:
@@ -71,10 +72,6 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-        # 清理多余文件，腾出磁盘空间
-        #docker rmi `docker images -q`
-        #sudo -E apt-get remove -y --purge azure-cli ghc zulu* llvm* firefox google* dotnet* powershell mysql* php* android*
-        #sudo rm -rf /etc/mysql /etc/php /swapfile
         
     - name: 克隆源码
       working-directory: /workdir
@@ -123,6 +120,15 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Organize files
+        id: organize
+        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+        run: |
+          cd openwrt/bin/*/*
+          rm -rf packages
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+          echo "::set-output name=status::success"
         
     - name: 清理磁盘空间
       if: (!cancelled())
@@ -151,9 +157,7 @@ jobs:
         WHOAMI: deng
         OPENWRT_ARMVIRT: openwrt-armvirt/*.tar.gz
         PACKAGE_SOC: s905d
-       # KERNEL_AUTO_LATEST: false
-       # KERNEL_REPO_URL: https://github.com/quanjindeng/Actions_OpenWrt-Amlogic/tree/main/kernel
-        KERNEL_VERSION_NAME: 6.1.37_5.4.249_5.15.119_5.10.186
+        KERNEL_VERSION_NAME: 6.1.38_5.4.249_5.15.120_5.10.185
 
     - name: 发布固件
       uses: ncipollo/release-action@v1
@@ -187,3 +191,11 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHDSQ_TOKEN }}
+
+    - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHDSQ_TOKEN}}
