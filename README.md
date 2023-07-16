@@ -6,6 +6,8 @@
 ![GitHub Stars](https://img.shields.io/github/stars/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Stars&logo=github)
 ![GitHub Forks](https://img.shields.io/github/forks/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Forks&logo=github)
 
+[![快速打包](https://github.com/xrcuo/Actions-OpenWrt-N1/actions/workflows/%E5%BF%AB%E9%80%9F%E6%89%93%E5%8C%85.yml/badge.svg)](https://github.com/xrcuo/Actions-OpenWrt-N1/actions/workflows/%E5%BF%AB%E9%80%9F%E6%89%93%E5%8C%85.yml)
+
 A template for building OpenWrt with GitHub Actions
 
 ## Usage
