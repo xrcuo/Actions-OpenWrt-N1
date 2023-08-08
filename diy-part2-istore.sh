@@ -4,14 +4,12 @@
 sed -i 's/192.168.1.1/192.168.2.24/g' package/base-files/files/bin/config_generate
 
 # 拉取软件包
-git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git package/lean/luci-theme-argon
-git clone -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-theme-argon
+git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
+git clone -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git package/luci-theme-argon
 git clone https://github.com/kenzok8/small-package package/small-package
 git clone https://github.com/ophub/luci-app-amlogic.git package/luci-app-amlogic
 
 # 删除重复包
-rm -rf package/lean/luci-theme-argon
-rm -rf package/lean/luci-app-argon-config
 rm -rf feeds/luci/themes/luci-theme-argon
 rm -rf package/small-package/luci-app-amlogic
 rm -rf package/small-package/luci-theme-argon*
