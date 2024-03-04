@@ -21,7 +21,7 @@ jobs:
 
       - name: Set up Go
         uses: unifreq/openwrt_packit@master
-        with:
+        env:
           WHOAMI: deng
           OPENWRT_ARMVIRT: openwrt-armvirt/*.tar.gz
           PACKAGE_SOC: s905d
