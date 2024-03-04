@@ -143,12 +143,12 @@ jobs:
       with:
         artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
         allowUpdates: true
-        token: ${{ secrets.GITHUB_TOKEA }}
+        token: ${{ secrets.GITHDSQ_TOKEN }}
           
     - name: 清理Actions空间
       uses: Mattraks/delete-workflow-runs@main
       with:
-          token: ${{ secrets.GITHUB_TOKEA }}
+          token: ${{ secrets.GITHDSQ_TOKEN }}
           repository: ${{ github.repository }}
           keep_minimum_runs: 0
           retain_days: 5
@@ -162,4 +162,4 @@ jobs:
         #keep_latest: ${{ github.event.inputs.rele }}
         delete_tags: true
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEA }}
+        GITHUB_TOKEN: ${{ secrets.GITHDSQ_TOKEN }}
