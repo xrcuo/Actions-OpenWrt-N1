@@ -30,7 +30,7 @@ jobs:
         WHOAMI: deng
         OPENWRT_ARMVIRT: openwrt-armvirt/*.tar.gz
         PACKAGE_SOC: s905d
-        KERNEL_VERSION_NAME: 6.1.42_5.4.251_5.15.123_5.10.188
+        KERNEL_VERSION_NAME: 6.1.80_5.4.269_5.15.150_5.10.210
 
     - name: 发布固件
       uses: ncipollo/release-action@v1
