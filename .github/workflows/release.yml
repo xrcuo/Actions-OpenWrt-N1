@@ -28,7 +28,7 @@ jobs:
           KERNEL_VERSION_NAME: 6.1.80_5.4.269_5.15.150_5.10.210
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: ncipollo/release-action@v1
         with:
           artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
           allowUpdates: true
