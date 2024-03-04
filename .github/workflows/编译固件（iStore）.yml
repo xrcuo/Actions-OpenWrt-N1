@@ -1,11 +1,9 @@
 name: 编译固件（iStore）
 
 on:
-  repository_dispatch:
-  workflow_dispatch:
-
-  schedule:
-    - cron: 0 16 15 * *
+  push:
+    tags:
+      - 'v*'
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -14,8 +12,8 @@ env:
   CONFIG_FILE: .config-istore
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2-istore.sh
-  UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
+  KERNEL_VERSION_NAME: 6.1.80_5.4.269_5.15.150_5.10.210
 
 jobs:
   build:
@@ -50,13 +48,7 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo apt update -y
         sudo apt full-upgrade -y
-        sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-        bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-        git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
-        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
-        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
-        libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
-        vim wget xmlto xxd zlib1g-dev python3-setuptools
+        sudo apt install -y $(cat apt)
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -104,24 +96,13 @@ jobs:
       id: compile
       run: |
         cd openwrt
-        ls -a
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-      run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
-
-
+        
     - name: 清理磁盘空间
       if: (!cancelled())
       run: |
@@ -132,7 +113,7 @@ jobs:
         echo -e "\n"
         echo "列出空间占用前10的目录或文件："
         sudo du -h --max-depth=1 /workdir/openwrt |sort -nr | head -10
-        rm -rf /workdir/openwrt/*
+        rm -rf /workdir/openwrt/* && sync
         echo -e "\n"
         echo "清理之后："
         df -hT
@@ -149,28 +130,19 @@ jobs:
         WHOAMI: deng
         OPENWRT_ARMVIRT: openwrt-armvirt/*.tar.gz
         PACKAGE_SOC: s905d
-       # KERNEL_AUTO_LATEST: false
-       # KERNEL_REPO_URL: https://github.com/quanjindeng/Actions_OpenWrt-Amlogic/tree/main/kernel
-        KERNEL_VERSION_NAME: 6.1.38_5.4.249_5.15.120_5.10.185
+        KERNEL_VERSION_NAME: $KERNEL_VERSION_NAME
 
     - name: 发布固件
       uses: ncipollo/release-action@v1
       with:
-        tag: openwrt_armvirt_iStore_${{ env.PACKAGED_OUTPUTDATE }}
-        artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
+        artifacts: ${{ secrets.GITHUB_TOKEN }}/*
         allowUpdates: true
-        token: ${{ secrets.GITHDSQ_TOKEN }}
-        body: |
-          ### **适用于Amlogic平台的N1盒子OpenWrt固件--精简版（含iStore插件）**
-          * **固件信息：**
-          默认IP: `192.168.2.24`
-          默认用户名: `root`
-          默认密码: `password`
+        token: ${{ secrets.GITHUB_TOKEN }}
           
     - name: 清理Actions空间
       uses: Mattraks/delete-workflow-runs@main
       with:
-          token: ${{ secrets.GITHDSQ_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           keep_minimum_runs: 0
           retain_days: 5
@@ -184,4 +156,4 @@ jobs:
         #keep_latest: ${{ github.event.inputs.rele }}
         delete_tags: true
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHDSQ_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
