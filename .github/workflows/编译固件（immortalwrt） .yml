@@ -1,19 +1,17 @@
-name: 编译固件（iStore）
-
+name: 编译固件（immortalwrt）
 on:
   push:
     tags:
-      - 'v*'
+      - 'x*'
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  REPO_BRANCH: master
+  REPO_URL: https://github.com/immortalwrt/immortalwrt
+  #REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config-istore
+  CONFIG_FILE: .config-immortalwrt
   DIY_P1_SH: diy-part1.sh
-  DIY_P2_SH: diy-part2-istore.sh
+  DIY_P2_SH: diy-part2-iImmortalwrt.sh
   TZ: Asia/Shanghai
-  KERNEL_VERSION_NAME: 6.1.80_5.4.269_5.15.150_5.10.210
 
 jobs:
   build:
@@ -21,8 +19,8 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@main
+
     - name: 检查服务器配置
       run: |
         echo "警告⚠"
@@ -40,41 +38,49 @@ jobs:
         echo -e  "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
         echo "硬盘详情："
         df -Th
-        
+
     - name: 初始化编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo apt update -y
-        sudo apt full-upgrade -y
-        sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+        sudo -E apt-get -qq update -y
+        sudo -E apt-get -qq install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
         bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
         git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
         libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
-        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
-        libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
-        vim wget xmlto xxd zlib1g-dev
+        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip qemu-utils \
+        rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-        
+        # 清理多余文件，腾出磁盘空间
+        docker rmi $(docker images -q)
+        # sudo -E apt-get remove -y --purge azure-cli ghc zulu* llvm* firefox google* dotnet* powershell mysql* php* android*
+        # sudo rm -rf /etc/mysql /etc/php /swapfile
+
     - name: 克隆源码
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone $REPO_URL openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        
+
+    - name: 编译工具链缓存
+      uses: klever1988/cachewrtbuild@main
+      with:
+        ccache: 'false'
+        prefix: ${{ github.workspace }}/openwrt
+
     - name: 加载自定义feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-        
+
     - name: 更新feeds
       run: cd openwrt && ./scripts/feeds update -a
 
@@ -88,7 +94,15 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-        
+
+    - name: 下载软件包
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
     - name: 编译固件
       id: compile
       run: |
@@ -99,7 +113,7 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-        
+
     - name: 清理磁盘空间
       if: (!cancelled())
       run: |
@@ -110,7 +124,7 @@ jobs:
         echo -e "\n"
         echo "列出空间占用前10的目录或文件："
         sudo du -h --max-depth=1 /workdir/openwrt |sort -nr | head -10
-        rm -rf /workdir/openwrt/* && sync
+        rm -rf /workdir/openwrt/*
         echo -e "\n"
         echo "清理之后："
         df -hT
@@ -127,30 +141,11 @@ jobs:
         WHOAMI: deng
         OPENWRT_ARMVIRT: openwrt-armvirt/*.tar.gz
         PACKAGE_SOC: s905d
-        KERNEL_VERSION_NAME: $KERNEL_VERSION_NAME
+        KERNEL_VERSION_NAME: 6.1.80_5.4.269_5.15.150_5.10.210
 
-    - name: 发布固件
+    - name: Run GoReleaser
       uses: ncipollo/release-action@v1
       with:
         artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
         allowUpdates: true
         token: ${{ secrets.GITHDSQ_TOKEN }}
-          
-    - name: 清理Actions空间
-      uses: Mattraks/delete-workflow-runs@main
-      with:
-          token: ${{ secrets.GITHDSQ_TOKEN }}
-          repository: ${{ github.repository }}
-          keep_minimum_runs: 0
-          retain_days: 5
-          #retain_days: ${{ github.event.inputs.action_days }}
-    
-    - name: 删除多余releases
-      uses: dev-drprasad/delete-older-releases@master
-      with:
-        repo: ${{ github.repository }}
-        keep_latest: 5
-        #keep_latest: ${{ github.event.inputs.rele }}
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHDSQ_TOKEN }}

@@ -16,6 +16,7 @@ jobs:
         id: build
         if: (!cancelled())
         run: |
+          sudo timedatectl set-timezone Asia/Shanghai
           wget -q -P openwrt-armvirt https://github.com/xrcuo/Actions-OpenWrt-N1/releases/download/v1.0/openwrt-armvirt-64-generic-rootfs.tar.gz
       
 

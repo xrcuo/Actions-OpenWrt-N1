@@ -3,7 +3,7 @@ name: release copy
 on:
   push:
     tags:
-      - 'x*'
+      - 'n*'
 
 jobs:
   goreleaser:
